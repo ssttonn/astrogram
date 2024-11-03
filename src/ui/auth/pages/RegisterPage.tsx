@@ -6,12 +6,20 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { RegisterValidationSchema } from "@/lib/validation";
 import Loader from "@/components/shared/Loader";
-import { Link } from "react-router-dom";
-import { createUserAccount } from "@/lib/appwrite/api";
+import { Link, useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { useCreateUserAccount, useSignInAccount } from "@/lib/react-query/queriesAndMutations";
+import { useUserContext } from "@/context/AuthContext";
 
 export const RegisterPage = () => {
-  const isLoading = false;
+  const { toast } = useToast();
+  const { checkAuthUser, isLoading: isUserLoading} = useUserContext()
+  const navigate = useNavigate()
 
+  const { mutateAsync: createUserAccount, isPending: isCreatingUser } = useCreateUserAccount();
+  const { mutateAsync: signInAccount, isPending: isSigningIn } = useSignInAccount();
+
+  
   const form = useForm<z.infer<typeof RegisterValidationSchema>>({
     resolver: zodResolver(RegisterValidationSchema),
     defaultValues: {
@@ -23,9 +31,28 @@ export const RegisterPage = () => {
   });
 
   async function onSubmit(values: z.infer<typeof RegisterValidationSchema>) {
-    const newUser = await createUserAccount(values)
+    const newUser = await createUserAccount(values);
 
-    console.log(newUser)
+    if (!newUser) {
+      return toast({ title: "Sign up failed. Please try again." });
+    }
+
+    const session = await signInAccount({
+      email: values.email,
+      password: values.password,
+    });
+
+    if (!session) {
+      return toast({ title: "Sign in failed. Please try again." });
+    }
+
+    const isLoggedIn = await checkAuthUser()
+    if (isLoggedIn) {
+      form.reset()
+      navigate("/")
+    } else {
+      return toast({ title: "Sign up failed. Please try again." });
+    }
   }
 
   return (
@@ -89,7 +116,7 @@ export const RegisterPage = () => {
             )}
           />
           <Button type="submit" className="shad-button_primary">
-            {isLoading ? (
+            {isCreatingUser ? (
               <div className="flex-center gap-2">
                 <Loader />
                 Loading...
@@ -100,7 +127,9 @@ export const RegisterPage = () => {
           </Button>
           <p className="text-small-regular text-light-2 text-center mt-2">
             Already have an account?
-            <Link to="/login" className="text-primary-500 text-small-semibold ml-1">Login</Link>
+            <Link to="/login" className="text-primary-500 text-small-semibold ml-1">
+              Login
+            </Link>
           </p>
         </form>
       </div>
