@@ -9,7 +9,7 @@ const Bottombar = () => {
       {bottombarLinks.map((link) => {
         const isActive = pathname === link.route;
         return (
-            <Link className={`${isActive && "bg-primary-500 rounded-[10px]"} flex-col flex-center gap-1 p-2 transistion`} to={link.route}>
+            <Link key={link.route} className={`${isActive && "bg-primary-500 rounded-[10px]"} flex-col flex-center gap-1 p-2 transistion`} to={link.route}>
               <img
                 src={link.imgURL}
                 alt={link.label}

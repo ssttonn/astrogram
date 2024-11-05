@@ -17,7 +17,7 @@ function App() {
         </Route>
 
         <Route path="/" element={<RootPage />}>
-          <Route path="/home" element={<HomePage />} />
+          <Route index element={<HomePage />} />
           <Route path="/explore" element={<ExplorePage/>}/>
           <Route path="/all-users" element={<AllUsersPage/>}/>
           <Route path="/saved" element={<SavedPage/>}/>
